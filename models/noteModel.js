@@ -15,8 +15,8 @@ mongoose
 
 const noteSchema = new mongoose.Schema({
   content: String,
-  data: Date,
   important: Boolean,
+  date: Date,
 })
 
 // formatting the returned object by database
