@@ -11,6 +11,19 @@ app.use(express.static('build'))
 // json-parser
 app.use(express.json())
 
+//Error Handler
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  }
+  next(error)
+}
+
+// this has to be the last loaded middleware
+app.use(errorHandler)
+
 app.get('/', (request, response) => {
   response.send('<h1>Notes App backend</h1>')
 })
@@ -21,7 +34,7 @@ app.get('/api/notes', (request, response) => {
   })
 })
 
-app.get('/api/notes/:id', (request, response) => {
+app.get('/api/notes/:id', (request, response, next) => {
   Note.findById(request.params.id)
     .then((note) => {
       if (note) {
@@ -30,17 +43,16 @@ app.get('/api/notes/:id', (request, response) => {
         response.status(404).end()
       }
     })
-    .catch((error) => {
-      console.log(error)
-      response.status(400).send({ error: 'malformatted id' })
-    })
+    .catch((error) => next(error))
 })
 
-// app.delete('/api/notes/:id', (request, response) => {
-//   Note.findById(request.params.id).then((note) => {
-//     response.json(note)
-//   })
-// })
+app.delete('/api/notes/:id', (request, response) => {
+  Note.findByIdAndRemove(request.params.id)
+    .then((result) => {
+      response.status(204).end()
+    })
+    .catch((error) => next(error))
+})
 
 app.post('/api/notes', (request, response) => {
   const body = request.body
@@ -60,6 +72,21 @@ app.post('/api/notes', (request, response) => {
   note.save().then((savedNote) => {
     response.json(savedNote)
   })
+})
+
+app.put('/api/notes/:id', (request, response) => {
+  const body = request.body
+
+  const note = {
+    content: body.content,
+    important: body.important,
+  }
+
+  Note.findByIdAndUpdate(request.params.id, note, { new: true })
+    .then((updatedNote) => {
+      response.json(updatedNote)
+    })
+    .catch((error) => next(error))
 })
 
 const PORT = process.env.PORT || 3001

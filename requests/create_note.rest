@@ -1,6 +1,7 @@
-POST http://localhost:5000/api/notes
+POST http://localhost:3001/api/notes
 Content-Type: application/json
 
 {
-  "content":"Howw"
+  "content":"codingfdsa.",
+  "important":true
 }
